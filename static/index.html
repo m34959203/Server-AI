@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Server Dashboard</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117;
+  --card: #161b22;
+  --card-hover: #1c2333;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-dim: #8b949e;
+  --accent: #58a6ff;
+  --green: #3fb950;
+  --red: #f85149;
+  --yellow: #d29922;
+  --orange: #db6d28;
+  --gradient-1: linear-gradient(135deg, #58a6ff 0%, #bc8cff 100%);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ── Header ─────────────────────── */
+.header {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.header-title .material-icons-round { font-size: 32px; background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.header-title h1 { font-size: 20px; font-weight: 600; }
+.header-right { display: flex; align-items: center; gap: 16px; color: var(--text-dim); font-size: 13px; }
+.header-right .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+
+/* ── Layout ─────────────────────── */
+.container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 32px 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title:first-child { margin-top: 0; }
+.section-title .material-icons-round { font-size: 20px; color: var(--accent); }
+
+/* ── GPU & System Row ───────────── */
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.stat-card h3 { font-size: 14px; color: var(--text-dim); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.stat-card h3 .material-icons-round { font-size: 18px; color: var(--accent); }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
+.stat-item label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
+.stat-item .value { font-size: 22px; font-weight: 700; }
+.stat-item .unit { font-size: 13px; color: var(--text-dim); font-weight: 400; }
+
+/* ── Progress bar ───────────────── */
+.bar-wrap { background: #21262d; border-radius: 6px; height: 10px; overflow: hidden; margin-top: 6px; }
+.bar-fill { height: 100%; border-radius: 6px; transition: width .6s ease, background .6s ease; }
+.bar-green { background: var(--green); }
+.bar-yellow { background: var(--yellow); }
+.bar-orange { background: var(--orange); }
+.bar-red { background: var(--red); }
+.bar-accent { background: var(--accent); }
+
+/* ── Services Grid ──────────────── */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.svc-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color .2s, transform .15s;
+  cursor: default;
+}
+.svc-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.svc-header { display: flex; align-items: center; gap: 12px; }
+.svc-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: #21262d;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.svc-icon .material-icons-round { font-size: 24px; color: var(--accent); }
+.svc-info { flex: 1; }
+.svc-info h3 { font-size: 15px; font-weight: 600; }
+.svc-info p { font-size: 12px; color: var(--text-dim); }
+.svc-status {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.svc-status.online { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.svc-status.offline { background: var(--red); box-shadow: 0 0 8px var(--red); }
+.svc-actions { display: flex; gap: 8px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #21262d;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .15s;
+  text-decoration: none;
+}
+.btn:hover { background: #30363d; border-color: var(--accent); }
+.btn .material-icons-round { font-size: 16px; }
+.btn-primary { background: #1f6feb; border-color: #1f6feb; }
+.btn-primary:hover { background: #388bfd; }
+.btn-danger { border-color: var(--red); color: var(--red); }
+.btn-danger:hover { background: rgba(248,81,73,.15); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+
+/* ── Ollama Section ─────────────── */
+.models-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.models-table th, .models-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.models-table th { background: #21262d; color: var(--text-dim); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+.models-table tr:last-child td { border-bottom: none; }
+.models-table tr:hover td { background: var(--card-hover); }
+
+.pull-row { display: flex; gap: 8px; margin-top: 12px; }
+.pull-row input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #21262d;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+}
+.pull-row input:focus { border-color: var(--accent); }
+.pull-row input::placeholder { color: var(--text-dim); }
+
+#pull-progress {
+  display: none;
+  margin-top: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+#pull-progress .status-text { font-size: 13px; color: var(--text-dim); margin-bottom: 8px; }
+
+/* ── Containers Table ───────────── */
+.toggle-btn {
+  background: none; border: none; color: var(--accent); cursor: pointer;
+  font-size: 13px; display: flex; align-items: center; gap: 4px;
+}
+.collapsible { overflow: hidden; transition: max-height .3s ease; }
+.collapsible.collapsed { max-height: 0; }
+.collapsible.expanded { max-height: 2000px; }
+.status-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+}
+.status-badge.running { background: rgba(63,185,80,.15); color: var(--green); }
+.status-badge.exited { background: rgba(248,81,73,.15); color: var(--red); }
+.status-badge.restarting { background: rgba(210,153,34,.15); color: var(--yellow); }
+
+/* ── Modal ──────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  max-width: 420px;
+  width: 90%;
+}
+.modal h3 { margin-bottom: 12px; }
+.modal p { color: var(--text-dim); font-size: 14px; margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ── Responsive ─────────────────── */
+@media (max-width: 900px) {
+  .stats-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .container { padding: 12px; }
+  .header { padding: 12px 16px; }
+  .header-title h1 { font-size: 16px; }
+  .services-grid { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-title">
+    <span class="material-icons-round">hub</span>
+    <h1>Панель управления ИИ-сервером</h1>
+  </div>
+  <div class="header-right">
+    <span id="online-count"></span>
+    <span id="clock"></span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- GPU & System -->
+  <div class="section-title"><span class="material-icons-round">monitoring</span> Ресурсы сервера</div>
+  <div class="stats-row">
+    <!-- GPU -->
+    <div class="stat-card" id="gpu-card">
+      <h3><span class="material-icons-round">memory</span> <span id="gpu-name">GPU</span></h3>
+      <div class="stat-grid">
+        <div class="stat-item">
+          <label>VRAM</label>
+          <div><span class="value" id="gpu-vram-used">—</span> <span class="unit">/ <span id="gpu-vram-total">—</span> MB</span></div>
+          <div class="bar-wrap"><div class="bar-fill bar-green" id="gpu-vram-bar" style="width:0%"></div></div>
+        </div>
+        <div class="stat-item">
+          <label>Загрузка GPU</label>
+          <div><span class="value" id="gpu-util">—</span><span class="unit">%</span></div>
+          <div class="bar-wrap"><div class="bar-fill bar-accent" id="gpu-util-bar" style="width:0%"></div></div>
+        </div>
+        <div class="stat-item">
+          <label>Температура</label>
+          <div><span class="value" id="gpu-temp">—</span><span class="unit">°C</span></div>
+        </div>
+        <div class="stat-item">
+          <label>Энергия</label>
+          <div><span class="value" id="gpu-power">—</span> <span class="unit">/ <span id="gpu-power-limit">—</span> W</span></div>
+        </div>
+      </div>
+    </div>
+    <!-- System -->
+    <div class="stat-card">
+      <h3><span class="material-icons-round">dns</span> Система</h3>
+      <div class="stat-grid">
+        <div class="stat-item">
+          <label>CPU</label>
+          <div><span class="value" id="sys-cpu">—</span><span class="unit">%</span></div>
+          <div class="bar-wrap"><div class="bar-fill bar-accent" id="sys-cpu-bar" style="width:0%"></div></div>
+        </div>
+        <div class="stat-item">
+          <label>RAM</label>
+          <div><span class="value" id="sys-ram">—</span> <span class="unit">/ <span id="sys-ram-total">—</span> GB</span></div>
+          <div class="bar-wrap"><div class="bar-fill bar-green" id="sys-ram-bar" style="width:0%"></div></div>
+        </div>
+        <div class="stat-item" style="grid-column: span 2;">
+          <label>Диск</label>
+          <div><span class="value" id="sys-disk">—</span> <span class="unit">/ <span id="sys-disk-total">—</span> TB</span></div>
+          <div class="bar-wrap"><div class="bar-fill bar-accent" id="sys-disk-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Services -->
+  <div class="section-title"><span class="material-icons-round">apps</span> Сервисы</div>
+  <div class="services-grid" id="services-grid"></div>
+
+  <!-- Ollama Models -->
+  <div class="section-title"><span class="material-icons-round">model_training</span> Модели Ollama</div>
+  <div style="overflow-x:auto;">
+    <table class="models-table" id="models-table">
+      <thead>
+        <tr>
+          <th>Модель</th>
+          <th>Семейство</th>
+          <th>Параметры</th>
+          <th>Квантизация</th>
+          <th>Размер</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="models-body">
+        <tr><td colspan="6" style="text-align:center;color:var(--text-dim)">Загрузка...</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="pull-row">
+    <input type="text" id="pull-input" placeholder="Имя модели, например: gemma2:9b">
+    <button class="btn btn-primary" onclick="pullModel()">
+      <span class="material-icons-round">download</span> Загрузить
+    </button>
+  </div>
+  <div id="pull-progress">
+    <div class="status-text" id="pull-status">Подготовка...</div>
+    <div class="bar-wrap"><div class="bar-fill bar-accent" id="pull-bar" style="width:0%"></div></div>
+  </div>
+
+  <!-- Containers -->
+  <div class="section-title">
+    <span class="material-icons-round">view_in_ar</span> Docker-контейнеры
+    <button class="toggle-btn" onclick="toggleContainers()">
+      <span class="material-icons-round" id="containers-toggle-icon">expand_more</span>
+    </button>
+  </div>
+  <div class="collapsible collapsed" id="containers-section">
+    <div style="overflow-x:auto;">
+      <table class="models-table" id="containers-table">
+        <thead>
+          <tr><th>Контейнер</th><th>Образ</th><th>Статус</th><th>Действия</th></tr>
+        </thead>
+        <tbody id="containers-body">
+          <tr><td colspan="4" style="text-align:center;color:var(--text-dim)">Загрузка...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <h3 id="modal-title">Подтверждение</h3>
+    <p id="modal-text"></p>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-danger" id="modal-confirm">Подтвердить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const HOST = location.hostname;
+let containersExpanded = false;
+
+// ── Helpers ─────────────────────────────────────────
+function fmt(bytes) {
+  if (bytes >= 1e12) return (bytes / 1e12).toFixed(1);
+  if (bytes >= 1e9) return (bytes / 1e9).toFixed(1);
+  if (bytes >= 1e6) return (bytes / 1e6).toFixed(0);
+  return (bytes / 1e3).toFixed(0);
+}
+function fmtSize(bytes) {
+  if (bytes >= 1e12) return (bytes / 1e12).toFixed(1) + ' TB';
+  if (bytes >= 1e9) return (bytes / 1e9).toFixed(1) + ' GB';
+  if (bytes >= 1e6) return (bytes / 1e6).toFixed(0) + ' MB';
+  return (bytes / 1e3).toFixed(0) + ' KB';
+}
+function barClass(pct) {
+  if (pct > 90) return 'bar-red';
+  if (pct > 75) return 'bar-orange';
+  if (pct > 50) return 'bar-yellow';
+  return 'bar-green';
+}
+function setBar(id, pct, autoColor) {
+  const el = document.getElementById(id);
+  el.style.width = pct + '%';
+  if (autoColor) { el.className = 'bar-fill ' + barClass(pct); }
+}
+
+// ── Clock ───────────────────────────────────────────
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('ru-RU');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── GPU ─────────────────────────────────────────────
+async function fetchGPU() {
+  try {
+    const r = await fetch('/api/gpu');
+    const d = await r.json();
+    if (d.error) return;
+    document.getElementById('gpu-name').textContent = d.name;
+    document.getElementById('gpu-vram-used').textContent = d.vram_used;
+    document.getElementById('gpu-vram-total').textContent = d.vram_total;
+    document.getElementById('gpu-util').textContent = d.util;
+    document.getElementById('gpu-temp').textContent = d.temp;
+    document.getElementById('gpu-power').textContent = Math.round(d.power_draw);
+    document.getElementById('gpu-power-limit').textContent = Math.round(d.power_limit);
+    const vramPct = (d.vram_used / d.vram_total * 100).toFixed(0);
+    setBar('gpu-vram-bar', vramPct, true);
+    setBar('gpu-util-bar', d.util, false);
+    // Temp color
+    const tempEl = document.getElementById('gpu-temp');
+    tempEl.style.color = d.temp > 80 ? 'var(--red)' : d.temp > 65 ? 'var(--yellow)' : 'var(--green)';
+  } catch(e) {}
+}
+
+// ── System ──────────────────────────────────────────
+async function fetchSystem() {
+  try {
+    const r = await fetch('/api/system');
+    const d = await r.json();
+    document.getElementById('sys-cpu').textContent = d.cpu_percent.toFixed(0);
+    setBar('sys-cpu-bar', d.cpu_percent, false);
+    document.getElementById('sys-ram').textContent = (d.ram_used / 1e9).toFixed(1);
+    document.getElementById('sys-ram-total').textContent = (d.ram_total / 1e9).toFixed(0);
+    setBar('sys-ram-bar', d.ram_percent, true);
+    document.getElementById('sys-disk').textContent = (d.disk_used / 1e12).toFixed(0);
+    document.getElementById('sys-disk-total').textContent = (d.disk_total / 1e12).toFixed(1);
+    setBar('sys-disk-bar', d.disk_percent, true);
+  } catch(e) {}
+}
+
+// ── Services ────────────────────────────────────────
+const ICON_MAP = {
+  chat: 'chat', mic: 'mic', image: 'image', search: 'search',
+  brain: 'psychology', hearing: 'hearing', volume_up: 'volume_up',
+  graphic_eq: 'graphic_eq', record_voice_over: 'record_voice_over'
+};
+
+async function fetchServices() {
+  try {
+    const r = await fetch('/api/services');
+    const data = await r.json();
+    const grid = document.getElementById('services-grid');
+    // count online
+    const onCount = data.filter(s => s.online).length;
+    document.getElementById('online-count').innerHTML =
+      `<span class="dot" style="background:var(--green)"></span>${onCount}/${data.length} онлайн`;
+
+    grid.innerHTML = data.map(s => {
+      const proto = s.link_https ? 'https' : 'http';
+      const link = `${proto}://${HOST}:${s.link_port}`;
+      const icon = ICON_MAP[s.icon] || s.icon;
+      return `
+        <div class="svc-card">
+          <div class="svc-header">
+            <div class="svc-icon"><span class="material-icons-round">${icon}</span></div>
+            <div class="svc-info">
+              <h3>${s.name}</h3>
+              <p>${s.desc} · порт ${s.link_port}</p>
+            </div>
+            <div class="svc-status ${s.online ? 'online' : 'offline'}"></div>
+          </div>
+          <div class="svc-actions">
+            <a class="btn" href="${link}" target="_blank">
+              <span class="material-icons-round">open_in_new</span> Открыть
+            </a>
+            <button class="btn btn-sm" onclick="restartContainer('${s.container}')">
+              <span class="material-icons-round">refresh</span>
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+// ── Ollama Models ───────────────────────────────────
+async function fetchModels() {
+  try {
+    const r = await fetch('/api/ollama/models');
+    const d = await r.json();
+    if (d.error || !d.models) return;
+    const tbody = document.getElementById('models-body');
+    if (!d.models.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim)">Нет моделей</td></tr>';
+      return;
+    }
+    tbody.innerHTML = d.models.map(m => {
+      const det = m.details || {};
+      return `<tr>
+        <td><strong>${m.name}</strong></td>
+        <td>${det.family || '—'}</td>
+        <td>${det.parameter_size || '—'}</td>
+        <td>${det.quantization_level || '—'}</td>
+        <td>${fmtSize(m.size)}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteModel('${m.name}')">
+          <span class="material-icons-round">delete</span></button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {}
+}
+
+// ── Pull Model ──────────────────────────────────────
+async function pullModel() {
+  const input = document.getElementById('pull-input');
+  const name = input.value.trim();
+  if (!name) return;
+
+  const prog = document.getElementById('pull-progress');
+  const status = document.getElementById('pull-status');
+  const bar = document.getElementById('pull-bar');
+  prog.style.display = 'block';
+  status.textContent = `Загрузка ${name}...`;
+  bar.style.width = '0%';
+
+  try {
+    const resp = await fetch('/api/ollama/pull', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name})
+    });
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, {stream: true});
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        try {
+          const d = JSON.parse(line.slice(6));
+          if (d.status) status.textContent = d.status;
+          if (d.total && d.completed) {
+            const pct = (d.completed / d.total * 100).toFixed(0);
+            bar.style.width = pct + '%';
+          }
+          if (d.status === 'success' || (d.done === true && !d.status)) {
+            status.textContent = 'Готово!';
+            bar.style.width = '100%';
+            setTimeout(() => { prog.style.display = 'none'; }, 3000);
+            fetchModels();
+          }
+        } catch(e) {}
+      }
+    }
+  } catch(e) {
+    status.textContent = 'Ошибка: ' + e.message;
+  }
+}
+
+// ── Delete Model ────────────────────────────────────
+function deleteModel(name) {
+  showModal(
+    'Удалить модель?',
+    `Вы уверены, что хотите удалить модель <strong>${name}</strong>?`,
+    async () => {
+      await fetch('/api/ollama/delete', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name})
+      });
+      fetchModels();
+    }
+  );
+}
+
+// ── Containers ──────────────────────────────────────
+async function fetchContainers() {
+  try {
+    const r = await fetch('/api/containers');
+    const data = await r.json();
+    if (data.error) return;
+    const tbody = document.getElementById('containers-body');
+    tbody.innerHTML = data.map(c => {
+      const cls = c.status === 'running' ? 'running' : c.status === 'exited' ? 'exited' : 'restarting';
+      const label = c.status === 'running' ? 'работает' : c.status === 'exited' ? 'остановлен' : c.status;
+      return `<tr>
+        <td><strong>${c.name}</strong></td>
+        <td style="font-size:12px;color:var(--text-dim)">${c.image}</td>
+        <td><span class="status-badge ${cls}">${label}</span></td>
+        <td>
+          ${c.status === 'running' ?
+            `<button class="btn btn-sm" onclick="containerAction('${c.name}','restart')"><span class="material-icons-round">refresh</span></button>
+             <button class="btn btn-sm btn-danger" onclick="containerAction('${c.name}','stop')"><span class="material-icons-round">stop</span></button>` :
+            `<button class="btn btn-sm btn-primary" onclick="containerAction('${c.name}','start')"><span class="material-icons-round">play_arrow</span></button>`
+          }
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {}
+}
+
+function toggleContainers() {
+  containersExpanded = !containersExpanded;
+  document.getElementById('containers-section').className = 'collapsible ' + (containersExpanded ? 'expanded' : 'collapsed');
+  document.getElementById('containers-toggle-icon').textContent = containersExpanded ? 'expand_less' : 'expand_more';
+  if (containersExpanded) fetchContainers();
+}
+
+// ── Container Actions ───────────────────────────────
+function restartContainer(name) {
+  showModal('Перезапустить?', `Перезапустить контейнер <strong>${name}</strong>?`, async () => {
+    await fetch(`/api/containers/${name}/restart`, {method:'POST'});
+    setTimeout(fetchAll, 2000);
+  });
+}
+
+function containerAction(name, action) {
+  const labels = {restart: 'Перезапустить', stop: 'Остановить', start: 'Запустить'};
+  showModal(`${labels[action]}?`, `${labels[action]} контейнер <strong>${name}</strong>?`, async () => {
+    await fetch(`/api/containers/${name}/${action}`, {method:'POST'});
+    setTimeout(() => { fetchContainers(); fetchServices(); }, 2000);
+  });
+}
+
+// ── Modal ───────────────────────────────────────────
+function showModal(title, text, onConfirm) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-text').innerHTML = text;
+  document.getElementById('confirm-modal').classList.add('active');
+  document.getElementById('modal-confirm').onclick = () => { closeModal(); onConfirm(); };
+}
+function closeModal() { document.getElementById('confirm-modal').classList.remove('active'); }
+
+// ── Main Loop ───────────────────────────────────────
+async function fetchAll() {
+  await Promise.all([fetchGPU(), fetchSystem(), fetchServices(), fetchModels()]);
+  if (containersExpanded) fetchContainers();
+}
+
+fetchAll();
+setInterval(fetchAll, 5000);
+
+// Enter key for pull
+document.getElementById('pull-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') pullModel();
+});
+</script>
+</body>
+</html>
